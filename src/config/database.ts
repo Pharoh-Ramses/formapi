@@ -1,5 +1,5 @@
 export const dbConfig = {
-    host: "wp-db-cp-3.cwu3mxkvfhlh.us-west-2.rds.amazonaws.com",
+    host: process.env.DB_HOST,
     port: parseInt(process.env.DB_PORT),
     database: process.env.DB_NAME,
     user: process.env.DB_USER,
