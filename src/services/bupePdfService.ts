@@ -102,7 +102,8 @@ export async function generatePDF(data: BupeIntake): Promise<Buffer> {
                 { label: 'Last Name', value: data.last_name },
                 { label: 'Phone Number', value: data.phone_number },
                 { label: 'Email', value: data.email },
-                { label: 'Date of Birth', value: formatDate(data.date_of_birth) }
+                { label: 'Date of Birth', value: formatDate(data.date_of_birth) },
+                { label: 'Sex', value: data.sex }
             ];
 
             patientFields.forEach(field => {
@@ -140,7 +141,7 @@ export async function generatePDF(data: BupeIntake): Promise<Buffer> {
 
             drawHorizontalLine(doc.y + 0);
 
-            doc.moveDown(2);
+            doc.moveDown(1);
 
             doc.text('My medical provider has explained the risks, benefits and alternatives to buprenorphine treatment. This question is required.*')
              if (data.bupe_risks_explained) {
