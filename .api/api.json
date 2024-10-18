@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "apis": [
+    {
+      "identifier": "elation-health-api",
+      "source": "@elation-health-api/v2.0#hjgm2allh71bf9v",
+      "integrity": "sha512-2eRYWlYqJz1427JdO1sEcxvGbh5qMEDqrtjeAz6EIE4pY9K5lG/6E9Il7RHIHvkzlgw7GEAN0sMD++DwLmHqvg==",
+      "installerVersion": "6.1.2"
+    }
+  ]
+}
