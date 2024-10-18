@@ -1,45 +1,52 @@
-import { config } from '../config/env';
 import { getBearer } from './getElationBearer';
-
-interface PatientSearchParams {
-    first_name: string;
-    last_name: string;
-    dob: string;
-}
 
 interface Patient {
     id: string;
     first_name: string;
     last_name: string;
-    dob: string;
+    dob: string;  // Changed to dob for Elation API
+    // Add other relevant fields
 }
 
-function paramsToRecord(params: PatientSearchParams): Record<string, string> {
-    return Object.entries(params).reduce((acc, [key, value]) => {
-        acc[key] = value.toString();
-        return acc;
-    }, {} as Record<string, string>);
+interface ElationResponse {
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: Patient[];
 }
 
-export async function findPatient(searchParams: PatientSearchParams): Promise<Patient[]> {
+export async function findElationPatients(lastName: string, firstName: string, dateOfBirth: string): Promise<Patient[]> {
     const bearerToken = await getBearer();
-    const queryParams = new URLSearchParams(paramsToRecord(searchParams));
-    const url = `${config.apiUrl}/patients/?${queryParams}`;
+    const baseUrl = 'https://sandbox.elationemr.com/api/2.0/patients/';
+    
+    const url = new URL(baseUrl);
+    if (firstName) url.searchParams.append('first_name', firstName);
+    if (lastName) url.searchParams.append('last_name', lastName);
+    if (dateOfBirth) url.searchParams.append('dob', dateOfBirth);  // Changed to dob for Elation API
+
     const options = {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${bearerToken}`,
-            'Accept': 'application/json',
+            'Accept': 'application/json'
         }
     };
 
     try {
-        const response = await fetch(url, options);
+        console.log(`Fetching patients with URL: ${url.toString()}`);
+        const response = await fetch(url.toString(), options);
+        
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorBody = await response.text();
+            console.error(`Error response body: ${errorBody}`);
+            throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
         }
-        const data: Patient[] = await response.json();
-        return data;
+
+        const data: ElationResponse = await response.json();
+        console.log('API Response:', JSON.stringify(data, null, 2));
+
+        console.log(`Found ${data.count} matching patients`);
+        return data.results;
     } catch (error) {
         console.error('Error fetching patients:', error);
         throw error;

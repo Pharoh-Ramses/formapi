@@ -75,4 +75,6 @@ export interface BupeIntake {
     signature?: string;
     created_at?: Date;
     stolen_reporting_agreement?: boolean;
+    primary_physician?: string;
+    caregiver_practice?: string;
 }

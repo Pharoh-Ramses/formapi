@@ -1,36 +1,46 @@
-import { config } from '../config/env';
+import dotenv from "dotenv";
+
+dotenv.config();
 
 interface TokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
-
-interface ErrorResponse {
-  error: string;
+    access_token: string;
+    token_type: string;
+    expires_in: number;
+    scope: string;
 }
 
 export async function getBearer(): Promise<string> {
-  const url = `${config.apiUrl}/oauth2/token/`;
-  const options = {
-    method: 'POST',
-    headers: {
-      accept: 'application/json',
-      'Content-type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64')}`
-    },
-    body: new URLSearchParams({ grant_type: 'client_credentials' })
-  };
+    const url = "https://sandbox.elationemr.com/api/2.0/oauth2/token/";
 
-  const response = await fetch(url, options);
-  const data: TokenResponse | ErrorResponse = await response.json();
+    const formData = new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: process.env.ELATION_CLIENT_ID || "",
+        client_secret: process.env.ELATION_CLIENT_SECRET || "",
+    });
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      throw new Error(`Authentication failed: ${(data as ErrorResponse).error}`);
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                Accept: "application/json",
+            },
+            body: formData,
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data: TokenResponse = await response.json();
+
+        if (!data.access_token) {
+            throw new Error("No access token in response");
+        }
+
+        return data.access_token;
+    } catch (error) {
+        console.error("Error fetching bearer token:", error);
+        throw error;
     }
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  return (data as TokenResponse).access_token;
 }

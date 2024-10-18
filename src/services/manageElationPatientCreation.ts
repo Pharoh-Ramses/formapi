@@ -1,36 +1,62 @@
-import { findPatient, PatientSearchParams } from "./findElationPatients";
+import { findElationPatients } from "./findElationPatients";
 import { createPatient } from "./createElationPatient";
-import { updatePatient, PatientData, ApiResponse } from "./updateElationPatient";
+import { updatePatient } from "./updateElationPatient";
+import { formatDate } from "../utils/formatDate";
 
-export async function manageElationPatientCreation(patientData: Omit<PatientData, 'id'>) {
+export async function manageElationPatientCreation(
+    last_name: string,
+    first_name: string,
+    sex: string,
+    date_of_birth: string | Date | undefined,
+    primary_physician: string,
+    caregiver_practice: string
+) {
     try {
-        const searchParams: PatientSearchParams = {
-            last_name: patientData.last_name,
-            first_name: patientData.first_name,
-            dob: patientData.dob,
-        };
+        console.log(`Received date of birth:`, date_of_birth);
+        
+        if (date_of_birth === undefined || date_of_birth === null) {
+            throw new Error('Date of birth is missing');
+        }
 
-        const existingPatients = await findPatient(searchParams);
+        const formattedDateOfBirth = formatDate(date_of_birth);
+        console.log(`Formatted date of birth:`, formattedDateOfBirth);
+
+        if (!formattedDateOfBirth) {
+            throw new Error(`Invalid date of birth: ${date_of_birth}`);
+        }
+
+        console.log(`Searching for patient: ${last_name}, ${first_name}, Date of Birth: ${formattedDateOfBirth}`);
+        const existingPatients = await findElationPatients(last_name, first_name, formattedDateOfBirth);
 
         if (existingPatients.length > 0) {
+            console.log(`Found existing patient(s): ${existingPatients.length}`);
             const existingPatient = existingPatients[0];
-            const updatedPatientData: PatientData = {
-                ...patientData,
-                id: existingPatient.id
-            };
-            const updateResponse: ApiResponse = await updatePatient(updatedPatientData);
+            console.log(`Updating patient with ID: ${existingPatient.id}`);
+            const updatedPatient = await updatePatient(
+                existingPatient.id,
+                last_name,
+                first_name,
+                sex,
+                formattedDateOfBirth,
+                primary_physician,
+                caregiver_practice
+            );
             
-            if (updateResponse.ok) {
-                const updatedPatient = await updateResponse.json();
-                return {
-                    action: "update",
-                    patient: updatedPatient,
-                };
-            } else {
-                throw new Error(`Failed to update patient. Status: ${updateResponse.status}`);
-            }
+            return {
+                action: "update",
+                patient: updatedPatient,
+            };
         } else {
-            const newPatient = await createPatient(patientData);
+            console.log("No existing patient found. Creating new patient.");
+            const newPatient = await createPatient(
+                last_name,
+                first_name,
+                sex,
+                formattedDateOfBirth,
+                primary_physician,
+                caregiver_practice
+            );
+            
             return {
                 action: "create",
                 patient: newPatient,
