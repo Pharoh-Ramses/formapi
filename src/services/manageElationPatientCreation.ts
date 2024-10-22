@@ -2,22 +2,18 @@ import { findElationPatients } from "./findElationPatients";
 import { createPatient } from "./createElationPatient";
 import { updatePatient } from "./updateElationPatient";
 import { formatDate } from "../utils/formatDate";
+import { ManagePatientResult, PatientActionType } from '../types/elation';
 
 export async function manageElationPatientCreation(
     last_name: string,
     first_name: string,
     sex: string,
-    date_of_birth: string | Date | undefined,
+    date_of_birth: string,
     primary_physician: string,
     caregiver_practice: string
-) {
+): Promise<ManagePatientResult> {
     try {
         console.log(`Received date of birth:`, date_of_birth);
-        
-        if (date_of_birth === undefined || date_of_birth === null) {
-            throw new Error('Date of birth is missing');
-        }
-
         const formattedDateOfBirth = formatDate(date_of_birth);
         console.log(`Formatted date of birth:`, formattedDateOfBirth);
 
@@ -41,11 +37,12 @@ export async function manageElationPatientCreation(
                 primary_physician,
                 caregiver_practice
             );
-            
-            return {
-                action: "update",
+
+            const result: ManagePatientResult = {
+                action: "update" as PatientActionType,
                 patient: updatedPatient,
             };
+            return result;
         } else {
             console.log("No existing patient found. Creating new patient.");
             const newPatient = await createPatient(
@@ -56,11 +53,12 @@ export async function manageElationPatientCreation(
                 primary_physician,
                 caregiver_practice
             );
-            
-            return {
-                action: "create",
+
+            const result: ManagePatientResult = {
+                action: "create" as PatientActionType,
                 patient: newPatient,
             };
+            return result;
         }
     } catch (error) {
         console.error("Error in manageElationPatientCreation:", error);
