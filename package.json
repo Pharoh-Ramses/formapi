@@ -18,6 +18,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.6",
     "@types/nodemailer": "^6.4.16",
     "@types/pg": "^8.11.10",
     "dotenv": "^16.4.5",

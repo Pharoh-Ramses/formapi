@@ -12,6 +12,8 @@ import {
     Patient,
     PatientActionType
 } from '../types/elation'
+import {createElationMessageThread} from "../services/createElationMessageThread.ts";
+import {formatDate} from "../utils/formatDate.ts";
 
 interface BupeEvent {
     last_name: string;
@@ -98,6 +100,37 @@ bupe.get('/:eventId', async (c) => {
 
         if (!emailResult) {
             throw new Error('Failed to send email')
+        }
+
+        const threadDate = formatDate(new Date())
+
+        const patientIdNumber = parseInt(patientId, 10)
+
+        const thread = await createElationMessageThread({
+            patient: patientIdNumber,
+            sender: patientIdNumber,
+            practice: patientIdNumber,
+            document_date: new Date(),
+            chart_date: new Date(),
+            delivery_date: new Date(),
+            members: [
+                {
+                    id: patientId,
+                    status: 'active'
+                }
+            ],
+            messages: [
+                {
+                    body: `Please find attached the bupe intake report for event ${eventId}.`,
+                    send_date: new Date(),
+                    sender: patientId
+                }
+            ],
+            is_urgent: false
+        })
+
+        if (!thread) {
+            throw new Error('Failed to create message thread')
         }
 
         const response: BupeApiResponse = {
